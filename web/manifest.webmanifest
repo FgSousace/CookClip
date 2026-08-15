@@ -1,0 +1,12 @@
+{
+  "name": "CookClip",
+  "short_name": "CookClip",
+  "description": "Lokalna książka kucharska z filmami instruktażowymi",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff7ed",
+  "theme_color": "#f97316",
+  "lang": "pl",
+  "icons": []
+}
