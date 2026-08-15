@@ -32,6 +32,10 @@ Stronę można otworzyć w Safari i używać bez instalacji natywnej aplikacji. 
 - automatyczny jasny/ciemny wygląd,
 - podstawowe działanie offline.
 
+## Wdrożenie
+
+Publikacja odbywa się automatycznie przez GitHub Pages po zmianach w folderze `web` na gałęzi `main`.
+
 ## Ograniczenia iOS/Safari
 
 Pamięć witryny jest zarządzana przez iOS. Usunięcie danych Safari lub danych witryny usuwa lokalną bazę CookClip. Przy bardzo dużej liczbie filmów warto dodać eksport/import kopii zapasowej lub opcjonalną synchronizację z chmurą.
