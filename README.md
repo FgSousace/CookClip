@@ -1,5 +1,11 @@
 # CookClip
 
+## 📱 Pobierz wersję iOS
+
+### [⬇️ POBIERZ COOKCLIP NA IPHONE — ZIP](https://github.com/FgSousace/CookClip/archive/refs/heads/agent/ios-swiftui-mvp.zip)
+
+> To jest paczka projektu iOS do otwarcia w Xcode. Gotowego pliku `.ipa` do instalacji jednym kliknięciem jeszcze nie ma — taki plik wymaga zbudowania i podpisania aplikacji w środowisku Apple/Xcode.
+
 CookClip to lokalna aplikacja do przechowywania przepisów z krótkim filmem instruktażowym. Ten branch zawiera natywną wersję iPhone w SwiftUI, odwzorowującą ustalony zakres funkcji wersji Android.
 
 ## iOS
@@ -22,7 +28,7 @@ CookClip to lokalna aplikacja do przechowywania przepisów z krótkim filmem ins
 
 ## Uruchomienie
 
-1. Sklonuj repozytorium.
+1. Pobierz ZIP przyciskiem powyżej i rozpakuj paczkę.
 2. Otwórz `CookClip.xcodeproj` w Xcode.
 3. W `Signing & Capabilities` wybierz własny Apple Development Team.
 4. Wybierz iPhone Simulator albo podłączony iPhone.
