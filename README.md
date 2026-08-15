@@ -1,5 +1,7 @@
 # CookClip
 
+[![Pobierz APK na Androida](https://img.shields.io/badge/Android-pobierz%20APK-2F7D4A?style=for-the-badge&logo=android&logoColor=white)](https://github.com/FgSousace/CookClip/releases/download/v0.1.0-alpha.1/CookClip-0.1.0-alpha.1-android.apk)
+
 CookClip to prywatna, lokalna książka przepisów z filmami na iOS i Androida. Dodajesz link źródłowy oraz film, kompresujesz go bezpośrednio na telefonie, a później masz całe danie w jednej czytelnej karcie: składniki, kroki, porcje, makro i wideo.
 
 > Status: działający MVP `0.1.0`. Dane i filmy nie opuszczają urządzenia. Automatyczne rozpoznawanie składników z mowy/obrazu jest kolejnym etapem — obecna wersja daje pełny lokalny edytor i nie udaje, że wysyła film do „magicznego AI”.
