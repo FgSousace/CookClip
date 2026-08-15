@@ -4,60 +4,65 @@ struct RecipeListView: View {
     @EnvironmentObject private var store: RecipeStore
     @State private var showingNewRecipe = false
     @State private var searchText = ""
+    @State private var selectedCategory = "Wszystkie"
+    @State private var favoritesOnly = false
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 14),
+        GridItem(.flexible(), spacing: 14)
+    ]
 
     private var filteredRecipes: [Recipe] {
-        guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return store.recipes }
-        return store.recipes.filter {
-            $0.title.localizedCaseInsensitiveContains(searchText) ||
-            $0.ingredients.joined(separator: " ").localizedCaseInsensitiveContains(searchText)
+        store.recipes.filter { recipe in
+            let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let matchesSearch = query.isEmpty || recipe.title.localizedCaseInsensitiveContains(query) || recipe.ingredients.map(\.name).joined(separator: " ").localizedCaseInsensitiveContains(query)
+            let matchesCategory = selectedCategory == "Wszystkie" || recipe.category == selectedCategory
+            let matchesFavorite = !favoritesOnly || recipe.isFavorite
+            return matchesSearch && matchesCategory && matchesFavorite
         }
     }
 
     var body: some View {
         NavigationStack {
-            Group {
-                if filteredRecipes.isEmpty {
-                    ContentUnavailableView(
-                        "Brak przepisów",
-                        systemImage: "fork.knife",
-                        description: Text("Dodaj pierwszy przepis przyciskiem +.")
-                    )
-                } else {
-                    List {
-                        ForEach(filteredRecipes) { recipe in
-                            NavigationLink {
-                                RecipeDetailView(recipeID: recipe.id)
-                            } label: {
-                                HStack(spacing: 14) {
-                                    ZStack {
-                                        RoundedRectangle(cornerRadius: 14)
-                                            .fill(.orange.opacity(0.15))
-                                        Image(systemName: recipe.videoFileName == nil ? "fork.knife" : "play.rectangle.fill")
-                                            .font(.title2)
-                                            .foregroundStyle(.orange)
-                                    }
-                                    .frame(width: 58, height: 58)
+            ScrollView {
+                VStack(spacing: 16) {
+                    categoryStrip
 
-                                    VStack(alignment: .leading, spacing: 5) {
-                                        Text(recipe.title)
-                                            .font(.headline)
-                                        Text("\(recipe.ingredients.count) składników • \(recipe.steps.count) kroków")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
+                    if filteredRecipes.isEmpty {
+                        ContentUnavailableView(
+                            "Brak przepisów",
+                            systemImage: "fork.knife",
+                            description: Text("Dodaj pierwszy przepis przyciskiem +.")
+                        )
+                        .padding(.top, 70)
+                    } else {
+                        LazyVGrid(columns: columns, spacing: 14) {
+                            ForEach(filteredRecipes) { recipe in
+                                NavigationLink(value: recipe.id) {
+                                    RecipeCardView(recipe: recipe)
                                 }
-                                .padding(.vertical, 4)
+                                .buttonStyle(.plain)
                             }
                         }
-                        .onDelete(perform: deleteFiltered)
                     }
-                    .listStyle(.insetGrouped)
                 }
+                .padding(.horizontal)
+                .padding(.bottom, 24)
             }
             .navigationTitle("CookClip")
             .searchable(text: $searchText, prompt: "Szukaj przepisu lub składnika")
+            .navigationDestination(for: UUID.self) { id in
+                RecipeDetailView(recipeID: id)
+            }
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        favoritesOnly.toggle()
+                    } label: {
+                        Image(systemName: favoritesOnly ? "heart.fill" : "heart")
+                    }
+                    .accessibilityLabel("Tylko ulubione")
+
                     Button {
                         showingNewRecipe = true
                     } label: {
@@ -67,16 +72,64 @@ struct RecipeListView: View {
                 }
             }
             .sheet(isPresented: $showingNewRecipe) {
-                NavigationStack {
-                    RecipeEditorView(mode: .new)
-                }
+                NavigationStack { RecipeEditorView(mode: .new) }
             }
         }
     }
 
-    private func deleteFiltered(at offsets: IndexSet) {
-        let ids = offsets.map { filteredRecipes[$0].id }
-        let storeOffsets = IndexSet(store.recipes.indices.filter { ids.contains(store.recipes[$0].id) })
-        store.delete(at: storeOffsets)
+    private var categoryStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(Recipe.categories, id: \.self) { category in
+                    Button(category) { selectedCategory = category }
+                        .buttonStyle(.borderedProminent)
+                        .tint(selectedCategory == category ? .orange : .gray.opacity(0.25))
+                        .foregroundStyle(selectedCategory == category ? .white : .primary)
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+}
+
+struct RecipeCardView: View {
+    let recipe: Recipe
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ZStack(alignment: .topTrailing) {
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(.orange.opacity(0.14))
+                    .aspectRatio(1.35, contentMode: .fit)
+                    .overlay {
+                        Image(systemName: recipe.videoFileName == nil ? "fork.knife" : "play.rectangle.fill")
+                            .font(.system(size: 36, weight: .semibold))
+                            .foregroundStyle(.orange)
+                    }
+
+                if recipe.isFavorite {
+                    Image(systemName: "heart.fill")
+                        .foregroundStyle(.red)
+                        .padding(10)
+                        .background(.ultraThinMaterial, in: Circle())
+                        .padding(8)
+                }
+            }
+
+            Text(recipe.title)
+                .font(.headline)
+                .lineLimit(2)
+
+            HStack(spacing: 8) {
+                Label("\(recipe.totalMinutes) min", systemImage: "clock")
+                Spacer(minLength: 0)
+                Label("\(recipe.servings)", systemImage: "person.2")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .padding(10)
+        .background(.background, in: RoundedRectangle(cornerRadius: 22))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 3)
     }
 }
