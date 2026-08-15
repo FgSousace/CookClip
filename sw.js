@@ -1,4 +1,4 @@
-const CACHE='cookclip-v5';
+const CACHE='cookclip-v6';
 const ASSETS=['./manifest.webmanifest','./import-fix.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
@@ -9,7 +9,7 @@ self.addEventListener('fetch',e=>{
     e.respondWith(fetch(e.request,{cache:'no-store'}).then(async r=>{
       let html=await r.text();
       html=html.replace('</head>',`<style>@media(max-width:520px){.top{flex-wrap:wrap}.brand{font-size:24px}.top .txt{display:inline!important}#importBtn{order:4;width:100%;background:var(--accent);color:#fff;border:0;padding:13px;font-size:16px}#importBtn .txt{display:inline!important}#add{min-width:54px}}</style></head>`);
-      html=html.replace('</body>',`<script src="./import-fix.js?v=5"></script></body>`);
+      html=html.replace('</body>',`<script src="./import-fix.js?v=6"></script></body>`);
       return new Response(html,{status:r.status,statusText:r.statusText,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});
     }));
     return;
