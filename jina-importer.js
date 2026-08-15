@@ -1,19 +1,11 @@
 (()=>{
-function clean(s){return String(s||'').replace(/\r/g,'').trim()}
-function stripMd(s){return clean(s).replace(/^[-*+]\s+/,'').replace(/^\d+[.)]\s+/,'').replace(/\*\*/g,'').replace(/__/g,'').replace(/\[(.*?)\]\([^)]*\)/g,'$1').trim()}
-function isHeading(line,names){const x=stripMd(line).toLowerCase().replace(/[:：]$/,'');return names.some(n=>x===n||x.startsWith(n+' '))}
-function section(lines,start,names){let out=[];for(let i=start+1;i<lines.length;i++){let l=clean(lines[i]);if(!l)continue;if(/^#{1,4}\s/.test(l)&&names.some(()=>true))break;if(out.length&&/^(składniki|ingredients|przygotowanie|wykonanie|sposób przygotowania|instrukcja|instructions|method|nutrition|wartości odżywcze|notes|notatki)\s*:?$/i.test(stripMd(l)))break;out.push(l)}return out}
-function findIdx(lines,names){return lines.findIndex(l=>isHeading(l.replace(/^#{1,6}\s*/,''),names)||names.some(n=>stripMd(l).toLowerCase().includes(n)&&stripMd(l).length<60))}
-function parseAmount(s){s=stripMd(s);let m=s.match(/^([\d¼½¾⅓⅔⅛⅜⅝⅞.,\/\-]+)\s*([a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ.]+)?\s+(.*)$/);if(!m)return{id:crypto.randomUUID(),name:s,amount:'',unit:''};let raw=m[1],map={'¼':.25,'½':.5,'¾':.75,'⅓':1/3,'⅔':2/3,'⅛':.125,'⅜':.375,'⅝':.625,'⅞':.875};let a=map[raw];if(a==null){if(raw.includes('/')){let p=raw.split('/');a=(Number(p[0])||0)/(Number(p[1])||1)}else a=Number(raw.replace(',','.').replace(/-.*/,''))}return{id:crypto.randomUUID(),amount:Number.isFinite(a)?a:'',unit:m[2]||'',name:m[3]||s}}
-function guessTitle(lines){for(let l of lines.slice(0,25)){let x=stripMd(l.replace(/^#{1,6}\s*/,''));if(x.length>3&&x.length<120&&!/^title:/i.test(x)&&!/^url source:/i.test(x)&&!/^published time:/i.test(x))return x}return 'Zaimportowany przepis'}
-function guessServings(text){let m=text.match(/(?:porcje|porcji|servings?|yield)\s*[:\-]?\s*(\d+)/i)||text.match(/(\d+)\s*(?:porcje|porcji|servings?)/i);return m?Number(m[1]):2}
-function guessTime(text,kind){let patterns=kind==='prep'?[/przygotowanie\s*[:\-]?\s*(\d+)\s*min/i,/prep(?:aration)?\s*time\s*[:\-]?\s*(\d+)/i]:[/gotowanie\s*[:\-]?\s*(\d+)\s*min/i,/cook(?:ing)?\s*time\s*[:\-]?\s*(\d+)/i];for(let p of patterns){let m=text.match(p);if(m)return Number(m[1])}return 0}
-function nutrition(text){let pick=(re)=>{let m=text.match(re);return m?parseFloat(m[1].replace(',','.'))||0:0};return{kcal:pick(/(?:kalorie|calories|kcal)\s*[:\-]?\s*(\d+[.,]?\d*)/i),protein:pick(/(?:białko|protein)\s*[:\-]?\s*(\d+[.,]?\d*)/i),fat:pick(/(?:tłuszcz|fat)\s*[:\-]?\s*(\d+[.,]?\d*)/i),carbs:pick(/(?:węglowodany|carbohydrates|carbs)\s*[:\-]?\s*(\d+[.,]?\d*)/i),fiber:pick(/(?:błonnik|fiber)\s*[:\-]?\s*(\d+[.,]?\d*)/i),sugars:pick(/(?:cukry|sugars)\s*[:\-]?\s*(\d+[.,]?\d*)/i),salt:pick(/(?:sól|salt)\s*[:\-]?\s*(\d+[.,]?\d*)/i)} }
-function parseMarkdown(md,url){let lines=md.split('\n').map(clean),text=lines.join('\n');let ii=findIdx(lines,['składniki','ingredients']),si=findIdx(lines,['przygotowanie','wykonanie','sposób przygotowania','instrukcja','instructions','method']);let ing=ii>=0?section(lines,ii,['składniki']):[];let steps=si>=0?section(lines,si,['przygotowanie']):[];ing=ing.map(stripMd).filter(x=>x&&x.length<220&&!/^(image|zdjęcie|reklama)$/i.test(x)).slice(0,80).map(parseAmount);steps=steps.map(stripMd).filter(x=>x&&x.length>3).slice(0,60).map(x=>({id:crypto.randomUUID(),text:x,time:''}));return{name:guessTitle(lines),recipeYield:guessServings(text),prepTime:guessTime(text,'prep'),cookTime:guessTime(text,'cook'),ingredients:ing,steps,nutrition:nutrition(text),description:'',url}}
-async function reader(url){let target='https://r.jina.ai/'+url;let r=await fetch(target,{headers:{Accept:'text/plain'}});if(!r.ok)throw Error('Jina HTTP '+r.status);let txt=await r.text();if(txt.length<80)throw Error('Pusta treść');return parseMarkdown(txt,url)}
-function apply(d,url){resetEditor();title.value=d.name||'Zaimportowany przepis';servings.value=d.recipeYield||2;prep.value=d.prepTime||0;cook.value=d.cookTime||0;sourceUrl.value=url;try{sourceName.value=new URL(url).hostname.replace(/^www\./,'')}catch{}ingredients.innerHTML='';(d.ingredients||[]).forEach(ingRow);if(!ingredients.children.length)ingRow();steps.innerHTML='';(d.steps||[]).forEach(stepRow);if(!steps.children.length)stepRow();for(let k of ['kcal','protein','fat','carbs','fiber','sugars','salt'])$('#'+k).value=d.nutrition?.[k]||'';importDialog.close();editorTitle.textContent='Sprawdź zaimportowany przepis';editor.showModal()}
-window.addEventListener('load',()=>{
-  const b=document.getElementById('analyzeUrl'); if(!b)return;
-  b.onclick=async()=>{let url=recipeUrl.value.trim();if(!/^https?:\/\//i.test(url)){importStatus.textContent='❌ Wklej pełny link zaczynający się od http:// lub https://';return}importStatus.textContent='⏳ Pobieram przez Reader i analizuję przepis…';try{let d=await reader(url);if((d.ingredients||[]).length<1&&(d.steps||[]).length<1)throw Error('Nie rozpoznano sekcji przepisu');apply(d,url)}catch(e){importStatus.textContent='❌ Nie udało się rozpoznać przepisu z tej strony: '+(e.message||e)}};
-});
+  // Legacy compatibility shim. The active importer lives in import-fix.js.
+  // Do not override its click handler; this avoids stale Safari caches surfacing Jina HTTP 403 on TikTok links.
+  if (window.__cookclipImporterInstalled) return;
+  const status = document.getElementById('importStatus');
+  const btn = document.getElementById('analyzeUrl');
+  if (!btn) return;
+  btn.onclick = () => {
+    if (status) status.textContent = 'ℹ️ Aktualizuję importer CookClip… Zamknij tę kartę i otwórz aplikację ponownie.';
+  };
 })();
