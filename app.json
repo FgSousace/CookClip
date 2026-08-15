@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "CookClip",
+    "slug": "cookclip",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android"],
+    "icon": "./assets/brand/cookclip-icon.png",
+    "scheme": "cookclip",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.fgsousace.cookclip",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "CookClip korzysta z biblioteki, aby dodać film do przepisu. Film zostaje wyłącznie na tym urządzeniu."
+      }
+    },
+    "android": {
+      "package": "com.fgsousace.cookclip",
+      "adaptiveIcon": {
+        "backgroundColor": "#163F27",
+        "foregroundImage": "./assets/brand/cookclip-foreground.png",
+        "monochromeImage": "./assets/brand/cookclip-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/brand/cookclip-favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#163F27",
+          "dark": {
+            "backgroundColor": "#0F1511"
+          },
+          "image": "./assets/brand/cookclip-splash.png",
+          "imageWidth": 176
+        }
+      ],
+      "expo-video",
+      "expo-sqlite",
+      "expo-sharing",
+      "react-native-compressor"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
