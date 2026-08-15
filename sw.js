@@ -1,5 +1,5 @@
-const CACHE='cookclip-v2';
-const ASSETS=['./manifest.webmanifest'];
+const CACHE='cookclip-v3';
+const ASSETS=['./manifest.webmanifest','./import-fix.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
@@ -9,9 +9,10 @@ self.addEventListener('fetch',e=>{
     e.respondWith(fetch(e.request,{cache:'no-store'}).then(async r=>{
       let html=await r.text();
       html=html.replace('</head>',`<style>@media(max-width:520px){.top{flex-wrap:wrap}.brand{font-size:24px}.top .txt{display:inline!important}#importBtn{order:4;width:100%;background:var(--accent);color:#fff;border:0;padding:13px;font-size:16px}#importBtn .txt{display:inline!important}#add{min-width:54px}}</style></head>`);
+      html=html.replace('</body>',`<script src="./import-fix.js?v=3"></script></body>`);
       return new Response(html,{status:r.status,statusText:r.statusText,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store'}});
     }).catch(()=>caches.match('./index.html')));
     return;
   }
-  e.respondWith(fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request)));
+  e.respondWith(fetch(e.request,{cache:'no-store'}).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request)));
 });
