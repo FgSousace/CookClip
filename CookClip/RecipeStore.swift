@@ -27,11 +27,16 @@ final class RecipeStore: ObservableObject {
         recipes[index] = updated
     }
 
-    func delete(at offsets: IndexSet) {
-        let removed = offsets.map { recipes[$0] }
-        recipes.remove(atOffsets: offsets)
-        for recipe in removed {
-            guard let name = recipe.videoFileName else { continue }
+    func toggleFavorite(_ id: UUID) {
+        guard let index = recipes.firstIndex(where: { $0.id == id }) else { return }
+        recipes[index].isFavorite.toggle()
+        recipes[index].updatedAt = Date()
+    }
+
+    func delete(_ id: UUID) {
+        guard let index = recipes.firstIndex(where: { $0.id == id }) else { return }
+        let recipe = recipes.remove(at: index)
+        if let name = recipe.videoFileName {
             try? FileManager.default.removeItem(at: videoURL(for: name))
         }
     }
@@ -40,10 +45,10 @@ final class RecipeStore: ObservableObject {
         fileURL.deletingLastPathComponent().appendingPathComponent(fileName)
     }
 
-    func importAndCompressVideo(from sourceURL: URL) async throws -> String {
+    func importAndCompressVideo(from sourceURL: URL, quality: VideoQuality = .recommended720) async throws -> String {
         let fileName = "video-\(UUID().uuidString).mp4"
         let destination = videoURL(for: fileName)
-        try await VideoCompressor.compress(sourceURL: sourceURL, destinationURL: destination)
+        try await VideoCompressor.compress(sourceURL: sourceURL, destinationURL: destination, quality: quality)
         return fileName
     }
 
